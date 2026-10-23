@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fibromyalgia – Primary Care Assistant</title>
+<style>
+:root{--bg:#f6f7fb;--card:#fff;--tx:#1d2433;--mu:#5d6679;--pr:#6b4c8a;--pr2:#efe8f6;--bd:#dfe2ea;--ok:#1f7a4d;--wa:#b36a00;--er:#b3261e;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14161c;--card:#1d2029;--tx:#e8eaf0;--mu:#9aa2b5;--pr:#c3a3e6;--pr2:#2b2338;--bd:#323746;--ok:#5fd09a;--wa:#f0b35a;--er:#ff8a80}}
+:root[data-theme="dark"]{--bg:#14161c;--card:#1d2029;--tx:#e8eaf0;--mu:#9aa2b5;--pr:#c3a3e6;--pr2:#2b2338;--bd:#323746;--ok:#5fd09a;--wa:#f0b35a;--er:#ff8a80}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{padding:14px 16px;background:var(--pr);color:#fff}
+header h1{margin:0;font-size:18px}header p{margin:2px 0 0;font-size:12px;opacity:.9}
+nav{display:flex;gap:6px;overflow-x:auto;padding:8px 10px;background:var(--card);border-bottom:1px solid var(--bd);position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
+nav button{flex:none;border:1px solid var(--bd);background:var(--card);color:var(--tx);padding:7px 12px;border-radius:18px;font-size:13px;cursor:pointer}
+nav button.on{background:var(--pr);color:#fff;border-color:var(--pr)}
+main{max-width:760px;margin:0 auto;padding:12px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:12px}
+h2{font-size:16px;margin:0 0 8px;color:var(--pr)}h3{font-size:14px;margin:12px 0 4px}
+label.c{display:flex;gap:8px;align-items:flex-start;padding:6px 0;cursor:pointer}
+label.c input{margin-top:4px;flex:none}
+.g{font-weight:600;font-size:12px;text-transform:uppercase;color:var(--mu);margin:12px 0 2px}
+.row{display:flex;gap:8px;flex-wrap:wrap}.row>*{flex:1 1 120px}
+input[type=number],select{width:100%;padding:8px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font:inherit}
+.btn{background:var(--pr);color:#fff;border:0;padding:10px 16px;border-radius:10px;font-size:14px;cursor:pointer}
+.btn.s{background:var(--pr2);color:var(--pr)}
+.badge{display:inline-block;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:600}
+.ok{background:#e0f3e9;color:var(--ok)}.wa{background:#fff0d6;color:var(--wa)}.er{background:#fde4e2;color:var(--er)}
+@media (prefers-color-scheme:dark){.ok{background:#173326}.wa{background:#3a2c12}.er{background:#3b1c1a}}
+ul{margin:4px 0;padding-left:20px}li{margin:2px 0}
+.tw{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:13px}td,th{border:1px solid var(--bd);padding:6px 8px;text-align:left}th{background:var(--pr2)}
+.note{font-size:12px;color:var(--mu)}
+.tp{display:grid;grid-template-columns:repeat(2,1fr);gap:2px 12px}
+details{border:1px solid var(--bd);border-radius:10px;padding:8px 12px;margin-bottom:8px}summary{cursor:pointer;font-weight:600}
+</style></head><body>
+<header><h1>Fibromyalgia – Primary Care Assistant</h1><p>Source: Harrison's Principles of Internal Medicine, Ch. 373 (Crofford), pp. 2868–2870 · Decision support only; clinical judgment prevails</p></header>
+<nav id="nav"></nav>
+<main id="v"></main>
+<script>
+const S={tab:0,pain:{},sx:{},dur:null,bp:{},ro:{},wp:{},ss:{},phq:{}};
+const tabs=["Assessment","Tests","Diagnosis","Treatment","Learn"];
+const REG=["Left jaw/face","Right jaw/face","Neck","Left shoulder","Right shoulder","Left upper arm","Right upper arm","Left lower arm","Right lower arm","Chest","Abdomen","Upper back","Lower back","Left hip/buttock/thigh","Right hip/buttock/thigh","Left lower leg","Right lower leg"];
+const WPI=REG; // generalized pain index regions (19-site WPI approximated by 17 clustered regions in this tool)
+const SYM=[["Fatigue","Waking unrefreshed","Cognitive trouble (attention, word retrieval, memory)"],["Sleep disturbance (initiation/maintenance/early waking)","Anxiety","Low mood / anhedonia"]];
+const OVER=["Headaches","Facial/jaw pain (TMD)","Irritable bowel","Painful bladder / pelvic pain","Restless legs","Sleep apnoea symptoms (snoring, witnessed apnoea)"];
+const TRIG=["Known arthritis / inflammatory joint disease","Joint hypermobility / scoliosis","Recent infection (viral/bacterial)","Statin or aromatase-inhibitor use","Major psychosocial stress / trauma / violence exposure","Thyroid or endocrine disease"];
+const RED=["Joint swelling, morning stiffness >1 h, or inflammatory back pain","Proximal muscle weakness","Fever, weight loss, night sweats","Focal neurological deficit or sphincter symptoms","Rash, oral/ocular dryness, Raynaud's","Objective sensory loss / reflex change"];
+function chk(g,k,l){return `<label class="c"><input type="checkbox" ${S[g][l]?'checked':''} onchange="S['${g}']['${l.replace(/'/g,"\\'")}']=this.checked;upd()"><span>${l}</span></label>`}
+function cnt(g){return Object.values(S[g]).filter(Boolean).length}
+function nav(){document.getElementById('nav').innerHTML=tabs.map((t,i)=>`<button class="${i==S.tab?'on':''}" onclick="S.tab=${i};render()">${t}</button>`).join('')}
+function upd(){const e=document.getElementById('live');if(e)e.innerHTML=live()}
+function live(){const n=cnt('bp');return `<b>${n}</b> body regions with pain · <b>${cnt('sx')}</b> core symptoms · <b>${cnt('ro')}</b> overlapping syndromes`}
+function assess(){return `
+<div class="card"><h2>1. Pain & duration</h2>
+<div class="row"><div><label class="note">Pain present most of the day, most days, for…</label><select onchange="S.dur=this.value;upd();">${["","<3 months","≥3 months"].map(o=>`<option ${S.dur==o?'selected':''}>${o}</option>`).join('')}</select></div></div>
+<div class="g">Sites of pain (both sides of body / above & below waist / axial)</div>
+<div class="tp">${REG.map(l=>chk('bp','',l)).join('')}</div></div>
+<div class="card"><h2>2. Neuropsychological symptoms</h2>
+${SYM.flat().map(l=>chk('sx','',l)).join('')}
+<div class="g">Severity of fatigue / unrefreshed sleep / cognition (0 none – 3 severe)</div>
+<div class="row"><div><select id="sev" onchange="S.sev=+this.value"><option value="0">0</option><option value="1">1 – mild</option><option value="2">2 – moderate</option><option value="3">3 – severe</option></select></div></div></div>
+<div class="card"><h2>3. Overlapping syndromes</h2>${OVER.map(l=>chk('ro',0,l)).join('')}</div>
+<div class="card"><h2>4. Possible pain generators / triggers</h2>${TRIG.map(l=>chk('wp',0,l)).join('')}</div>
+<div class="card"><h2>5. Red flags (suggest another diagnosis)</h2>${RED.map(l=>chk('ss',0,l)).join('')}</div>
+<div class="card"><h2>6. Examination</h2>
+<label class="c"><input type="checkbox" onchange="S.tend=this.checked"><span>Widespread tenderness: pain on BP-cuff pressure / skin-roll or thumbnail pressure (~4 kg/m²) at multiple sites</span></label>
+<label class="c"><input type="checkbox" onchange="S.joint=this.checked"><span>Joint swelling / synovitis on exam</span></label>
+<label class="c"><input type="checkbox" onchange="S.neuro=this.checked"><span>Abnormal neurological exam</span></label>
+<div class="g">Tender-point sites (optional, Fig 373-1 – not required for diagnosis)</div>
+<div class="row"><div><input type="number" min="0" max="18" placeholder="Tender points /18" oninput="S.tpn=this.value"></div></div>
+<p class="note">Older ACR criteria required 11/18; newer criteria drop tender points in favour of widespread pain plus neuropsychological symptoms.</p></div>
+<div class="card" style="position:sticky;bottom:6px"><span id="live">${live()}</span><br><button class="btn" style="margin-top:8px" onclick="S.tab=1;render()">Next: Tests →</button></div>`}
+function tests(){return `
+<div class="card"><h2>Routine tests (all new chronic widespread pain)</h2>
+<ul><li>ESR or CRP</li><li>Complete blood count (CBC)</li><li>TSH</li></ul>
+<p class="note">Routine tests are normal in FM without comorbidity. Testing aims to exclude other diagnoses and find pain generators.</p></div>
+<div class="card"><h2>Guided by history & examination</h2>
+<table><tr><th>Test</th><th>Consider when</th></tr>
+<tr><td>Complete metabolic panel</td><td>Fatigue, myalgia, drug/organ concerns</td></tr>
+<tr><td>Creatine phosphokinase (CPK)</td><td>Weakness, statin use, myopathy suspected</td></tr>
+<tr><td>ANA; anti-SSA / anti-SSB</td><td>Dryness, rash, Raynaud's (SLE, Sjögren's)</td></tr>
+<tr><td>RF, anti-CCP</td><td>Synovitis / inflammatory arthritis features</td></tr>
+<tr><td>Hepatitis C, HIV, Lyme serology</td><td>Risk factors / exposure</td></tr>
+<tr><td>Spine & joint radiographs</td><td>Sparingly – only if inflammatory arthritis suspected</td></tr></table>
+<p class="note"><b>Avoid:</b> repeat testing once thoroughly evaluated unless symptoms change; MRI of spine unless inflammatory spine disease or neurological features.</p></div>
+<div class="card"><h2>Your patient – suggested panel</h2><div id="tl"></div></div>`}
+function testList(){const o=['ESR/CRP','CBC','TSH'];
+if(S.ss[RED[0]]||S.joint||S.wp[TRIG[0]])o.push('RF, anti-CCP','ANA','Joint/spine radiographs (inflammatory arthritis suspected)');
+if(S.ss[RED[1]]||S.wp[TRIG[3]])o.push('CPK','Complete metabolic panel');
+if(S.ss[RED[4]])o.push('ANA','Anti-SSA/SSB');
+if(S.ss[RED[2]]||S.wp[TRIG[2]])o.push('Viral (HCV, HIV) and Lyme serology as indicated','Complete metabolic panel');
+if(S.ss[RED[3]]||S.neuro||S.ss[RED[5]])o.push('Neurology review; MRI only if neurological/inflammatory spine features');
+if(S.wp[TRIG[5]])o.push('Consider calcium / PTH (hyperparathyroidism)');
+return [...new Set(o)]}
+function dx(){
+const reg=cnt('bp'),sym=cnt('sx'),red=cnt('ss');
+const wide=reg>=4,dur=S.dur=="≥3 months",nps=sym>=2;
+const tpn=S.tpn!==undefined&&S.tpn!==''?+S.tpn:null;
+let lvl,msg;
+if(red>0||S.joint||S.neuro){lvl='er';msg='Features suggest an alternative or co-existing condition. Investigate inflammatory/neurological/systemic disease before attributing symptoms to FM.'}
+else if(wide&&dur&&nps){lvl='ok';msg='Clinical picture is consistent with fibromyalgia (widespread pain ≥3 months with neuropsychological symptoms), provided routine tests are normal.'}
+else if(wide&&(!dur||!nps)){lvl='wa';msg='Partial picture. Document duration (≥3 months) and neuropsychological symptoms; reassess at follow-up.'}
+else{lvl='wa';msg='Insufficient widespread pain for FM. Consider regional pain syndromes (myofascial, tendinopathy) and other causes.'}
+let h=`<div class="card"><h2>Likelihood</h2><span class="badge ${lvl}">${lvl=='ok'?'Consistent with FM':lvl=='er'?'Look for alternative diagnosis':'Incomplete / uncertain'}</span><p>${msg}</p>
+<table><tr><th>Criterion</th><th>Status</th></tr>
+<tr><td>Widespread pain (several regions, both sides, axial)</td><td>${wide?'✔ '+reg+' regions':'✘ '+reg+' regions'}</td></tr>
+<tr><td>Present ≥3 months, most of day, most days</td><td>${dur?'✔':'✘ / not set'}</td></tr>
+<tr><td>Neuropsychological symptoms (fatigue, sleep, cognition, mood)</td><td>${nps?'✔ '+sym:'✘ '+sym}</td></tr>
+<tr><td>Widespread tenderness on exam</td><td>${S.tend?'✔':'—'}</td></tr>
+<tr><td>Tender points (optional)</td><td>${tpn===null?'—':tpn+'/18'+(tpn>=11?' (met old ACR threshold)':'')}</td></tr>
+<tr><td>Red flags / abnormal exam</td><td>${red||S.joint||S.neuro?'⚠ present':'none'}</td></tr></table>
+<p class="note">Tender-point count is not required; use as a continuous measure of tenderness.</p></div>`;
+const tr=cnt('wp'),ov=cnt('ro');
+if(tr)h+=`<div class="card"><h2>Pain generators / triggers to treat</h2><ul>${Object.keys(S.wp).filter(k=>S.wp[k]).map(k=>`<li>${k}</li>`).join('')}</ul><p class="note">Treat the triggering condition itself; FM may be comorbid (10–30% of inflammatory/degenerative rheumatic disease).</p></div>`;
+if(ov)h+=`<div class="card"><h2>Overlapping syndromes</h2><ul>${Object.keys(S.ro).filter(k=>S.ro[k]).map(k=>`<li>${k}</li>`).join('')}</ul>${S.ro[OVER[5]]?'<p>Sleep apnoea symptoms: consider sleep study.</p>':''}</div>`;
+h+=`<div class="card"><h2>Screen & differential</h2><ul><li><b>Depression:</b> ask about depressed mood and anhedonia (lifetime mood disorder ~80%).</li><li>Screen for PTSD / prior violence if relevant.</li><li><b>Differential (Table 373-1):</b> polymyalgia rheumatica, RA/spondyloarthritis, SLE, Sjögren's; hepatitis C, HIV, Lyme, parvovirus B19, EBV; degenerative disease, myofascial pain, bursitis/tendinitis; hypo/hyperthyroidism, hyperparathyroidism; MS, neuropathic pain; major depression; statins, aromatase inhibitors.</li></ul></div>`;
+return h}
+function tx(){
+const sev=S.sev||0;const d=S.sx[SYM[0][0]]||S.sx[SYM[1][1]]||S.sx[SYM[1][2]]; // fatigue/anxiety/mood
+const sleep=S.sx[SYM[1][0]];
+let first=d?'Duloxetine or milnacipran (balanced SNRI – analgesic + antidepressant/anxiolytic) is a good first choice when fatigue, anxiety or depression accompany pain.':sleep?'Where pain and sleep disturbance dominate, use an agent with analgesic and sleep-promoting effects: cyclobenzaprine, amitriptyline (sedating antidepressant) or pregabalin/gabapentin (α2δ ligands).':'Choose a single agent matching the dominant symptom domain.';
+return `
+<div class="card"><h2>Treatment goals</h2><ul><li>Improve <b>function and quality of life</b> rather than eliminate pain</li><li>Partnership with patient; set expectations; explain genetics, triggers, physiology</li><li>Discourage illness behaviours (frequent visits); encourage functional behaviours</li><li>Treat any comorbid triggering condition</li></ul></div>
+<div class="card"><h2>Suggested for this patient</h2><p>${first}</p>${S.ro[OVER[5]]?'<p>Evaluate for sleep apnoea before sedating drugs.</p>':''}${S.wp[TRIG[4]]?'<p>Psychosocial stress/trauma flagged: consider psychological support / treatment of post-traumatic stress.</p>':''}${S.wp[TRIG[0]]?'<p>Concomitant inflammatory disease: NSAIDs/glucocorticoids help inflammation but not FM symptoms.</p>':''}${S.wp[TRIG[3]]?'<p>Statin/aromatase inhibitor flagged: review drug as possible contributor.</p>':''}</div>
+<div class="card"><h2>Non-pharmacologic (start here for all)</h2><ul>
+<li><b>Aerobic exercise:</b> begin low, advance slowly – the most consistently helpful strategy</li>
+<li>Supervised or water-based programme at start if previously inactive</li>
+<li>Strength training once aerobic goals reached</li>
+<li>CBT: improve sleep hygiene, reduce illness behaviours, self-efficacy</li>
+<li>Meditative movement: qigong, yoga, tai chi</li>
+<li>Option: TENS, acupuncture, hydrotherapy</li></ul></div>
+<div class="card"><h2>Pharmacologic (Table 373-3)</h2><div class="tw"><table><tr><th>Class</th><th>Agent</th><th>Notes</th></tr>
+<tr><td>Muscle relaxant</td><td>Cyclobenzaprine</td><td>Sleep-promoting, analgesic</td></tr>
+<tr><td rowspan=3>SNRI / antidepressant</td><td>Amitriptyline</td><td>Sedating; evening dose</td></tr>
+<tr><td>Duloxetine</td><td>FDA-approved</td></tr>
+<tr><td>Milnacipran</td><td>FDA-approved</td></tr>
+<tr><td>α2δ ligand</td><td>Pregabalin</td><td>FDA-approved; gabapentin also used</td></tr>
+<tr><td>Analgesic</td><td>Tramadol</td><td>Weak SNRI activity; some efficacy</td></tr></table></div>
+<ul><li>Use single agents to cover multiple domains</li><li><b>Avoid strong opioids</b> – no demonstrated efficacy, may worsen symptoms and function</li><li>NSAIDs/steroids are not effective for FM itself</li><li>Doses: follow product label/local formulary (not specified in source)</li></ul></div>
+<div class="card"><h2>Follow-up & referral</h2><ul><li>Reassess pain, sleep, fatigue, mood and function (physical, mental, social roles)</li><li>Avoid repeat testing unless symptoms change</li><li>Refer to rheumatology if inflammatory features; psychiatry/psychology for major depression or PTSD; sleep medicine if apnoea suspected</li></ul></div>`}
+function learn(){return `
+<div class="card"><h2>Key facts</h2>
+<details open><summary>Definition & epidemiology</summary><p>Chronic widespread musculoskeletal pain and tenderness with fatigue, unrefreshing sleep, cognitive dysfunction, anxiety and depression. Prevalence ~2% worldwide (~4% women, &lt;1% men); clinic F:M ≈ 9:1.</p></details>
+<details><summary>Pathophysiology</summary><p>Central sensitization: altered sensory afferent processing and impaired descending noxious inhibition → hyperalgesia and allodynia. Polygenic (serotonin, monoamine pathways); influenced by catastrophizing and emotional factors. Possible small-fibre neuropathy in some.</p></details>
+<details><summary>Diagnosis pearls</summary><p>Clinical diagnosis. Newer criteria use widespread/multisite pain plus neuropsychological symptoms; tender-point count (11/18, ~4 kg/m² pressure) is no longer required.</p></details>
+<details><summary>Tender-point sites (Fig 373-1)</summary><p>Occiput (suboccipital insertions), low cervical (C5–C7), trapezius (upper border midpoint), supraspinatus, second rib (costochondral), lateral epicondyle (2 cm distal), gluteal (upper outer quadrant), greater trochanter, knee (medial fat pad).</p></details>
+<details><summary>Comorbid & overlapping conditions</summary><p>Myalgic encephalitis/CFS, TMD, chronic headache, IBS, interstitial cystitis, restless legs, sleep apnoea. FM occurs in 10–30% of degenerative/inflammatory rheumatic disease.</p></details></div>
+<p class="note">Educational tool derived from Harrison's Ch. 373; not a substitute for clinical judgment. Drug doses and local guidelines should be verified.</p>`}
+function render(){nav();const v=document.getElementById('v');v.innerHTML=[assess,tests,()=>'<div id="dx"></div>',tx,learn][S.tab]();
+if(S.tab==1)document.getElementById('tl').innerHTML='<ul>'+testList().map(t=>`<li>${t}</li>`).join('')+'</ul>';
+if(S.tab==2)document.getElementById('dx').innerHTML=dx();
+scrollTo(0,0)}
+render();
+</script></body></html>
